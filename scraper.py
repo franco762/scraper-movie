@@ -1,4 +1,3 @@
-from requests.sessions import session
 from requests_html import HTMLSession
 
 class Scraper():
@@ -6,13 +5,19 @@ class Scraper():
     url = 'https://www.colombia.com/cine/{}'
     session = HTMLSession()
 
-    def HelperGetMovies(self, movies: list):
+    def HelperGetMovies(self, movies: list, premier = True):
         result = []
-        for movie in movies:
+        for index, movie in enumerate(movies):
             items = {
-                'id': movie.find('a', first=True).attrs['href'][6:],
-                'title': movie.find('.title-pelicula', first=True).text
+                'id'    : movie.find('a', first=True).attrs['href'][6:],
+                'title' : movie.find('.title-pelicula', first=True).text
             }
+
+            if index == 0 and premier == True:
+                items['cover'] = movie.find('.imagen picture img', first=True).attrs['src']
+            else :
+                items['cover'] = movie.find('.imagen picture img', first=True).attrs['data-src']
+
             result.append(items)
 
         return result
@@ -22,10 +27,10 @@ class Scraper():
         
         movies_urls = []
         premieres = r.html.find('.pelicula-estreno')
+        
         others = r.html.find('.pelicula')
-
         movies_urls.extend(self.HelperGetMovies(premieres))
-        movies_urls.extend(self.HelperGetMovies(others))
+        movies_urls.extend(self.HelperGetMovies(others, False))
         
         return movies_urls
 
